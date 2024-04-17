@@ -1,3 +1,0 @@
-GET http://localhost:8080/
-Accept: text/plain
-X-Request-ID: {{$uuid}}

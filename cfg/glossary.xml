@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE terms SYSTEM "https://resources.jetbrains.com/stardust/glossary.dtd">
-<terms>
-    <term name="query_string">
-        A part of a URL that assigns values to specified parameters and starts with the ? character.
-    </term>
-</terms>

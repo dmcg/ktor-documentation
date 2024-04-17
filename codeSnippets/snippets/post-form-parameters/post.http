@@ -1,4 +1,0 @@
-POST http://localhost:8080/signup
-Content-Type: application/x-www-form-urlencoded
-
-username=JetBrains&email=example@jetbrains.com&password=foobar&confirmation=foobar

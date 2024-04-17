@@ -1,4 +1,0 @@
-POST http://localhost:8080/transform-data
-Content-Type: text/plain
-
-10

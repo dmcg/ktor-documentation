@@ -1,2 +1,0 @@
-POST http://0.0.0.0:8080/customer/3
-X-Http-Method-Override: DELETE
