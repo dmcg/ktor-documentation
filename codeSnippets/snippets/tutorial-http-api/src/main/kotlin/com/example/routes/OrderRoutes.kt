@@ -6,18 +6,18 @@ import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-fun Route.listOrdersRoute() {
+fun Route.listOrdersRoute(orders: List<Order>) {
     get("/order") {
-        if (orderStorage.isNotEmpty()) {
-            call.respond(orderStorage)
+        if (orders.isNotEmpty()) {
+            call.respond(orders)
         }
     }
 }
 
-fun Route.getOrderRoute() {
+fun Route.getOrderRoute(orders: List<Order>) {
     get("/order/{id?}") {
         val id = call.parameters["id"] ?: return@get call.respondText("Bad Request", status = HttpStatusCode.BadRequest)
-        val order = orderStorage.find { it.number == id } ?: return@get call.respondText(
+        val order = orders.find { it.number == id } ?: return@get call.respondText(
             "Not Found",
             status = HttpStatusCode.NotFound
         )
@@ -25,10 +25,10 @@ fun Route.getOrderRoute() {
     }
 }
 
-fun Route.totalizeOrderRoute() {
+fun Route.totalizeOrderRoute(orders: List<Order>) {
     get("/order/{id?}/total") {
         val id = call.parameters["id"] ?: return@get call.respondText("Bad Request", status = HttpStatusCode.BadRequest)
-        val order = orderStorage.find { it.number == id } ?: return@get call.respondText(
+        val order = orders.find { it.number == id } ?: return@get call.respondText(
             "Not Found",
             status = HttpStatusCode.NotFound
         )
