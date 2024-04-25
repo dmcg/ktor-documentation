@@ -9,5 +9,3 @@ data class Customer(
     val lastName: String,
     val email: String
 )
-
-val customerStorage = mutableListOf<Customer>()

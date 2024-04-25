@@ -2,17 +2,18 @@ package com.example
 
 import com.example.models.Customer
 import com.example.models.Order
-import com.example.models.orderStorage
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.server.testing.*
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class CustomerRouteTests {
 
-    val myCustomerStorage = mutableListOf<Customer>()
-    val myOrderStorage = emptyList<Order>()
+    private val customers = mutableListOf<Customer>()
+    private val orders = emptyList<Order>()
 
     private val aCustomer = Customer(
         id = "id",
@@ -20,56 +21,60 @@ class CustomerRouteTests {
         lastName = "lastName",
         email = "email",
     )
+    private val aCustomerJson = """{"id":"id","firstName":"firstName","lastName":"lastName","email":"email"}"""
 
     @Test
     fun `returns No customers found when there are no customers`() =
-        testApplicationWith(myCustomerStorage, myOrderStorage) {
-            val response = client.get("/customer")
+        testApplicationWith(customers, orders) {
+            val response: HttpResponse = client.get("/customer")
             assertEquals(HttpStatusCode.OK, response.status)
-            assertEquals(
-                "No customers found",
-                response.bodyAsText()
-            )
+            assertEquals("No customers found", response.bodyAsText())
         }
 
     @Test
     fun `returns all the customers`() =
-        testApplicationWith(myCustomerStorage, myOrderStorage) {
-            myCustomerStorage.add(
-                aCustomer
-            )
+        testApplicationWith(customers, orders) {
+            customers.add(aCustomer)
             val response = client.get("/customer")
             assertEquals(HttpStatusCode.OK, response.status)
-            assertEquals(
-                """[{"id":"id","firstName":"firstName","lastName":"lastName","email":"email"}]""",
-                response.bodyAsText()
-            )
+            assertEquals("[$aCustomerJson]", response.bodyAsText())
         }
 
     @Test
     fun `returns a single customer by id`() =
-        testApplicationWith(myCustomerStorage, myOrderStorage) {
-            myCustomerStorage.add(
-                aCustomer
-            )
+        testApplicationWith(customers, orders) {
+            customers.add(aCustomer)
             val response = client.get("/customer/id")
             assertEquals(HttpStatusCode.OK, response.status)
-            assertEquals(
-                """{"id":"id","firstName":"firstName","lastName":"lastName","email":"email"}""",
-                response.bodyAsText()
-            )
+            assertEquals(aCustomerJson, response.bodyAsText())
         }
-}
 
-fun testApplicationWith(
-    customerStorage: MutableList<Customer>,
-    orders: List<Order>,
-    block: suspend ApplicationTestBuilder.() -> Unit
-) {
-    testApplication {
-        application {
-            module(customerStorage, orders)
+    @Test
+    fun `returns 404 when no customer found by id`() =
+        testApplicationWith(customers, orders) {
+            customers.add(aCustomer)
+            val response = client.get("/customer/no-such-id")
+            assertEquals(HttpStatusCode.NotFound, response.status)
+            assertEquals("No customer with id no-such-id", response.bodyAsText())
         }
-        this.block()
-    }
+
+    @Test
+    fun `deletes a customer by id`() =
+        testApplicationWith(customers, orders) {
+            customers.add(aCustomer)
+            val response = client.delete("/customer/id")
+            assertEquals(HttpStatusCode.Accepted, response.status)
+            assertEquals("Customer removed correctly", response.bodyAsText())
+            assertTrue(customers.isEmpty())
+        }
+
+    @Test
+    fun `returns 404 when no customer found to delete`() =
+        testApplicationWith(customers, orders) {
+            customers.add(aCustomer)
+            val response = client.delete("/customer/no-such-id")
+            assertEquals(HttpStatusCode.NotFound, response.status)
+            assertEquals("Not Found", response.bodyAsText())
+            assertFalse(customers.isEmpty())
+        }
 }
