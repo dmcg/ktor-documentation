@@ -2,15 +2,16 @@ package com.example
 
 import com.example.models.Customer
 import com.example.models.Order
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.http.ContentType
+import org.http4k.core.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-class CustomerRouteTests {
+@org.junit.Ignore
+class CustomerRouteHttp4kTests {
 
     private val customers = mutableListOf<Customer>()
     private val orders = emptyList<Order>()
@@ -118,5 +119,49 @@ class CustomerRouteTests {
             assertEquals(HttpStatusCode.UnsupportedMediaType, response.status)
             assertTrue(customers.isEmpty())
         }
+
+    fun testApplicationWith(
+        customerStorage: MutableList<Customer>,
+        orders: List<Order>,
+        block: TestContext.() -> Unit
+    ) {
+        val routes: HttpHandler = TODO()
+        TestContext(routes).block()
+    }
+
+    fun assertEquals(expected: HttpStatusCode, actual: Status) {
+        assertEquals(expected.value, actual.code)
+    }
+}
+
+private fun Response.bodyAsText(): String = this.bodyString()
+
+fun HttpHandler.delete(path: String) = this(Request(Method.DELETE, path))
+fun HttpHandler.get(path: String) = this(Request(Method.GET, path))
+fun HttpHandler.post(
+    path: String,
+    block: RequestBuilderContext.() -> Unit
+) : Response {
+    val builder = RequestBuilderContext(Request(Method.POST, path))
+    builder.block()
+    return this.invoke(builder.request)
+}
+
+
+class RequestBuilderContext(
+    var request: Request
+) {
+    fun contentType(contentType: ContentType) {
+        require(contentType == ContentType.Application.Json)
+        request = request.header("Content-Type", org.http4k.core.ContentType.APPLICATION_JSON.toHeaderValue())
+    }
+    fun setBody(string: String) {
+        request = request.body(string)
+    }
+
+}
+class TestContext(
+    val client: HttpHandler
+) {
 
 }

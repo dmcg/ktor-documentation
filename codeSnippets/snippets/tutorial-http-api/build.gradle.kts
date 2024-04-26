@@ -24,6 +24,12 @@ dependencies {
     implementation("io.ktor:ktor-serialization-kotlinx-json-jvm")
     implementation("io.ktor:ktor-server-netty-jvm")
     implementation("ch.qos.logback:logback-classic:$logback_version")
+
+    implementation(platform("org.http4k:http4k-bom:5.16.2.0"))
+    implementation("org.http4k:http4k-core")
+    implementation("org.http4k:http4k-format-jackson")
+    implementation("org.http4k:http4k-server-netty")
+
     testImplementation("io.ktor:ktor-server-test-host:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 }
