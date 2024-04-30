@@ -2,6 +2,7 @@ package com.example
 
 import com.example.models.Customer
 import com.example.models.Order
+import com.example.routes.routesFor
 import io.ktor.http.*
 import io.ktor.http.ContentType
 import org.http4k.core.*
@@ -10,7 +11,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-@org.junit.Ignore
 class CustomerRouteHttp4kTests {
 
     private val customers = mutableListOf<Customer>()
@@ -125,9 +125,10 @@ class CustomerRouteHttp4kTests {
         orders: List<Order>,
         block: TestContext.() -> Unit
     ) {
-        val routes: HttpHandler = TODO()
+        val routes: HttpHandler = routesFor(customerStorage)
         TestContext(routes).block()
     }
+
 
     fun assertEquals(expected: HttpStatusCode, actual: Status) {
         assertEquals(expected.value, actual.code)
