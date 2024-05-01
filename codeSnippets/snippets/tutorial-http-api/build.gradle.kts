@@ -1,5 +1,4 @@
 import org.gradle.plugins.ide.idea.model.IdeaModel
-import org.jetbrains.kotlin.ir.linkage.partial.PartialLinkageUtils.File.MissingDeclarations.module
 
 val ktor_version: String by project
 val kotlin_version: String by project
@@ -29,7 +28,7 @@ dependencies {
     implementation("io.ktor:ktor-server-netty-jvm")
     implementation("ch.qos.logback:logback-classic:$logback_version")
 
-    implementation(platform("org.http4k:http4k-bom:5.17.0.0"))
+    implementation(platform("org.http4k:http4k-bom:5.18.2.0"))
     implementation("org.http4k:http4k-core")
     implementation("org.http4k:http4k-format-kotlinx-serialization")
     implementation("org.http4k:http4k-server-netty")

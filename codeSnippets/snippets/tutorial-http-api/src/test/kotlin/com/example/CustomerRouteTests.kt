@@ -12,9 +12,6 @@ import kotlin.test.assertTrue
 
 class CustomerRouteTests {
 
-    private val customers = mutableListOf<Customer>()
-    private val orders = emptyList<Order>()
-
     private val aCustomer = Customer(
         id = "id",
         firstName = "firstName",
@@ -23,88 +20,95 @@ class CustomerRouteTests {
     )
     private val aCustomerJson = """{"id":"id","firstName":"firstName","lastName":"lastName","email":"email"}"""
 
+    private val customers = mutableListOf(aCustomer)
+    private val orders = emptyList<Order>()
+
     @Test
     fun `returns No customers found when there are no customers`() =
         testApplicationWith(customers, orders) {
-            val response = client.get("/customer")
-            assertEquals(HttpStatusCode.OK, response.status)
-            assertEquals("No customers found", response.bodyAsText())
+            customers.clear()
+            with(client.get("/customer")) {
+                assertEquals(HttpStatusCode.OK, status)
+                assertEquals("No customers found", bodyAsText())
+            }
         }
 
     @Test
     fun `returns all the customers`() =
         testApplicationWith(customers, orders) {
-            customers.add(aCustomer)
-            val response = client.get("/customer")
-            assertEquals(HttpStatusCode.OK, response.status)
-            assertEquals("[$aCustomerJson]", response.bodyAsText())
+            with(client.get("/customer")) {
+                assertEquals(HttpStatusCode.OK, status)
+                assertEquals("[$aCustomerJson]", bodyAsText())
+            }
         }
 
     @Test
     fun `returns a single customer by id`() =
         testApplicationWith(customers, orders) {
-            customers.add(aCustomer)
-            val response = client.get("/customer/id")
-            assertEquals(HttpStatusCode.OK, response.status)
-            assertEquals(aCustomerJson, response.bodyAsText())
+            with(client.get("/customer/id")) {
+                assertEquals(HttpStatusCode.OK, status)
+                assertEquals(aCustomerJson, bodyAsText())
+            }
         }
 
     @Test
     fun `returns 404 when no customer found by id`() =
         testApplicationWith(customers, orders) {
-            customers.add(aCustomer)
-            val response = client.get("/customer/no-such-id")
-            assertEquals(HttpStatusCode.NotFound, response.status)
-            assertEquals("No customer with id no-such-id", response.bodyAsText())
+            with(client.get("/customer/no-such-id")) {
+                assertEquals(HttpStatusCode.NotFound, status)
+                assertEquals("No customer with id no-such-id", bodyAsText())
+            }
         }
 
     @Test
     fun `returns 400 when no id`() =
         testApplicationWith(customers, orders) {
-            customers.add(aCustomer)
-            val response = client.get("/customer/")
-            assertEquals(HttpStatusCode.BadRequest, response.status)
-            assertEquals("Missing id", response.bodyAsText())
+            with(client.get("/customer/")) {
+                assertEquals(HttpStatusCode.BadRequest, status)
+                assertEquals("Missing id", bodyAsText())
+            }
         }
 
     @Test
     fun `deletes a customer by id`() =
         testApplicationWith(customers, orders) {
-            customers.add(aCustomer)
-            val response = client.delete("/customer/id")
-            assertEquals(HttpStatusCode.Accepted, response.status)
-            assertEquals("Customer removed correctly", response.bodyAsText())
+            with(client.delete("/customer/id")) {
+                assertEquals(HttpStatusCode.Accepted, status)
+                assertEquals("Customer removed correctly", bodyAsText())
+            }
             assertTrue(customers.isEmpty())
         }
 
     @Test
     fun `returns 404 when no customer found to delete`() =
         testApplicationWith(customers, orders) {
-            customers.add(aCustomer)
-            val response = client.delete("/customer/no-such-id")
-            assertEquals(HttpStatusCode.NotFound, response.status)
-            assertEquals("Not Found", response.bodyAsText())
+            with(client.delete("/customer/no-such-id")) {
+                assertEquals(HttpStatusCode.NotFound, status)
+                assertEquals("Not Found", bodyAsText())
+            }
             assertFalse(customers.isEmpty())
         }
 
     @Test
     fun `returns 400 when no id given to delete`() =
         testApplicationWith(customers, orders) {
-            customers.add(aCustomer)
-            val response = client.delete("/customer/")
-            assertEquals(HttpStatusCode.BadRequest, response.status)
+            with(client.delete("/customer/")) {
+                assertEquals(HttpStatusCode.BadRequest, status)
+            }
             assertFalse(customers.isEmpty())
         }
 
     @Test
     fun `adds a customer`() =
         testApplicationWith(customers, orders) {
-            assertTrue(customers.isEmpty())
+            customers.clear()
             val response = client.post("/customer") {
                 contentType(ContentType.Application.Json)
                 setBody(aCustomerJson)
             }
-            assertEquals(HttpStatusCode.Created, response.status)
+            with(response) {
+                assertEquals(HttpStatusCode.Created, status)
+            }
             assertEquals(listOf(aCustomer), customers)
         }
 
@@ -115,8 +119,9 @@ class CustomerRouteTests {
                 contentType(ContentType.Application.Json)
                 setBody("")
             }
-            assertEquals(HttpStatusCode.UnsupportedMediaType, response.status)
-            assertTrue(customers.isEmpty())
+            with(response) {
+                assertEquals(HttpStatusCode.UnsupportedMediaType, status)
+            }
+            assertEquals(listOf(aCustomer), customers)
         }
-
 }

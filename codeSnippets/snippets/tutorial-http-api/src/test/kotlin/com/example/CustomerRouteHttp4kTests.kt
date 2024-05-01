@@ -3,7 +3,6 @@ package com.example
 import com.example.models.Customer
 import com.example.models.Order
 import com.example.plugins.routesFor
-import io.ktor.http.ContentType
 import org.http4k.core.*
 import org.http4k.core.Method.*
 import org.http4k.strikt.bodyString
@@ -17,10 +16,6 @@ import kotlin.test.assertTrue
 
 class CustomerRouteHttp4kTests {
 
-    private val customers = mutableListOf<Customer>()
-    private val orders = emptyList<Order>()
-    val handler = routesFor(customers, orders)
-
     private val aCustomer = Customer(
         id = "id",
         firstName = "firstName",
@@ -29,8 +24,13 @@ class CustomerRouteHttp4kTests {
     )
     private val aCustomerJson = """{"id":"id","firstName":"firstName","lastName":"lastName","email":"email"}"""
 
+    private val customers = mutableListOf(aCustomer)
+    private val orders = emptyList<Order>()
+    private val handler = routesFor(customers, orders)
+
     @Test
     fun `returns No customers found when there are no customers`() {
+        customers.clear()
         expectThat(handler(Request(GET, "/customer"))) {
             status.isEqualTo(Status.OK)
             bodyString.isEqualTo("No customers found")
@@ -39,7 +39,6 @@ class CustomerRouteHttp4kTests {
 
     @Test
     fun `returns all the customers`() {
-        customers.add(aCustomer)
         expectThat(handler(Request(GET, "/customer"))) {
             status.isEqualTo(Status.OK)
             bodyString.isEqualTo("[$aCustomerJson]")
@@ -48,7 +47,6 @@ class CustomerRouteHttp4kTests {
 
     @Test
     fun `returns a single customer by id`() {
-        customers.add(aCustomer)
         expectThat(handler(Request(GET, "/customer/id"))) {
             status.isEqualTo(Status.OK)
             bodyString.isEqualTo(aCustomerJson)
@@ -57,7 +55,6 @@ class CustomerRouteHttp4kTests {
 
     @Test
     fun `returns 404 when no customer found by id`() {
-        customers.add(aCustomer)
         expectThat(handler(Request(GET, "/customer/no-such-id"))) {
             status.isEqualTo(Status.NOT_FOUND)
             bodyString.isEqualTo("No customer with id no-such-id")
@@ -66,7 +63,6 @@ class CustomerRouteHttp4kTests {
 
     @Test
     fun `returns all customers when no id`() {
-        customers.add(aCustomer)
         expectThat(handler(Request(GET, "/customer/"))) {
             status.isEqualTo(Status.OK)
             bodyString.isEqualTo("[$aCustomerJson]")
@@ -75,7 +71,6 @@ class CustomerRouteHttp4kTests {
 
     @Test
     fun `deletes a customer by id`() {
-        customers.add(aCustomer)
         expectThat(handler(Request(DELETE, "/customer/id"))) {
             status.isEqualTo(Status.ACCEPTED)
             bodyString.isEqualTo("Customer removed correctly")
@@ -85,7 +80,6 @@ class CustomerRouteHttp4kTests {
 
     @Test
     fun `returns 404 when no customer found to delete`() {
-        customers.add(aCustomer)
         expectThat(handler(Request(DELETE, "/customer/no-such-id"))) {
             status.isEqualTo(Status.NOT_FOUND)
             bodyString.isEqualTo("Not Found")
@@ -95,7 +89,6 @@ class CustomerRouteHttp4kTests {
 
     @Test
     fun `returns 405 when no id given to delete`() {
-        customers.add(aCustomer)
         expectThat(handler(Request(DELETE, "/customer/"))) {
             status.isEqualTo(Status.METHOD_NOT_ALLOWED)
         }
@@ -104,7 +97,7 @@ class CustomerRouteHttp4kTests {
 
     @Test
     fun `adds a customer`() {
-        assertTrue(customers.isEmpty())
+        customers.clear()
         expectThat(
             handler(Request(POST, "/customer").body(aCustomerJson))
         ) {
@@ -118,6 +111,6 @@ class CustomerRouteHttp4kTests {
         expectThat(handler(Request(POST, "/customer"))) {
             status.isEqualTo(Status.BAD_REQUEST)
         }
-        assertTrue(customers.isEmpty())
+        assertEquals(listOf(aCustomer), customers)
     }
 }
