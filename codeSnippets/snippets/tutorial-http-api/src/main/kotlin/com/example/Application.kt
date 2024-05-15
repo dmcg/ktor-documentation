@@ -16,7 +16,10 @@ fun main() {
     ).start(wait = true)
 }
 
-fun Application.module(customers: MutableList<Customer>, orders: List<Order>) {
+fun Application.module(
+    customers: MutableList<Customer>,
+    orders: List<Order>
+) {
     configureRouting(customers, orders)
     configureSerialization()
 }

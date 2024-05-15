@@ -13,7 +13,6 @@ import org.http4k.routing.bind
 import org.http4k.routing.path
 import org.http4k.routing.routes
 
-
 fun routesFor(customers: MutableList<Customer>) =
     with(exampleAppJson) {
         routes(
