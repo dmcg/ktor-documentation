@@ -1,4 +1,8 @@
 pluginManagement {
+
+    val kotlinVersion: String by settings
+    val ktorVersion: String by settings
+
     repositories {
         gradlePluginPortal()
         mavenCentral()
@@ -10,6 +14,14 @@ pluginManagement {
                 useModule("com.google.cloud.tools:appengine-gradle-plugin:${requested.version}")
             }
         }
+    }
+
+    plugins{
+        kotlin("jvm") version kotlinVersion
+        kotlin("plugin.serialization") version kotlinVersion
+        id("io.ktor.plugin") version ktorVersion
+        id("idea")
+
     }
 }
 

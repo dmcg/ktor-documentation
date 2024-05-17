@@ -1,27 +1,17 @@
 import org.gradle.plugins.ide.idea.model.IdeaModel
 
-val ktor_version: String by project
-val kotlin_version: String by project
-val logback_version: String by project
+val ktorVersion: String by project
+val kotlinVersion: String by project
+val logbackVersion: String by project
 
 plugins {
     application
     kotlin("jvm")
-    kotlin("plugin.serialization") version "1.9.10"
-    id("io.ktor.plugin") version "2.3.10"
+    kotlin("plugin.serialization")
+    id("io.ktor.plugin")
     id("idea")
 }
 
-java {
-    toolchain {
-//        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
-
-
-kotlin {
-    jvmToolchain(21)
-}
 
 application {
     mainClass.set("io.ktor.server.netty.EngineMain")
@@ -37,7 +27,7 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation-jvm")
     implementation("io.ktor:ktor-serialization-kotlinx-json-jvm")
     implementation("io.ktor:ktor-server-netty-jvm")
-    implementation("ch.qos.logback:logback-classic:$logback_version")
+    implementation("ch.qos.logback:logback-classic:$logbackVersion")
 
     implementation(platform("org.http4k:http4k-bom:5.18.2.0"))
     implementation("org.http4k:http4k-core")
@@ -46,8 +36,8 @@ dependencies {
     implementation("org.http4k:http4k-server-jetty")
     implementation("org.http4k:http4k-client-okhttp")
 
-    testImplementation("io.ktor:ktor-server-test-host:$ktor_version")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
+    testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
     testImplementation("org.http4k:http4k-testing-strikt")
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
 }

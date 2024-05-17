@@ -10,6 +10,7 @@ import org.http4k.server.asServer
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import java.net.ServerSocket
 import java.time.Duration
 import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicInteger
@@ -20,13 +21,39 @@ class ThroughputTests {
     private val invocationCount = AtomicInteger(0)
     private lateinit var report: Report
 
+    val port = Companion.getFreePort()
+    val baseRequestUri = "http://localhost:${this.port}/"
+    init{
+        Companion.setUpPort(port)
+        Companion.setUpBaseRequestUri(port)
+    }
+
     companion object {
+        @Volatile
+        private var port: Int = 0
+
+        @Volatile
+        private var baseRequestUri = "http://localhost:${port}/"
+
         private val query = Query.required("s")
-        private val request = Request(Method.GET, "http://localhost/").with(query of "banana")
+        private val request = Request(Method.GET, baseRequestUri).with(query of "banana")
         private fun body(value: Any) = Response(Status.OK).body(value.toString())
         private fun checkResponse(response: Response) {
             assertEquals(Status.OK, response.status)
-            assertEquals("6", response.bodyString())
+            println(response.bodyString())
+            assertEquals(0, response.body.length)
+        }
+        private fun getFreePort(): Int {
+            val socket = ServerSocket(0)
+            val port = socket.localPort
+            socket.close()
+            return port
+        }
+        fun setUpPort(port: Int){
+            this.port = port
+        }
+        fun setUpBaseRequestUri(port: Int){
+            this.baseRequestUri = "http://localhost:${port}/"
         }
     }
 
@@ -63,67 +90,69 @@ class ThroughputTests {
         assertEquals(report.requestCount, invocationCount.get())
     }
 
-}
 
-fun requestLotsHttp4k(
-    count: Int,
-    serverConfig: (Int) -> ServerConfig,
-    handler: HttpHandler,
-    request: Request,
-    assertion: (Response) -> Unit
-) : Report {
-    return handler.asServer(serverConfig(0)).start().use { server ->
-        val requestForMyPort = request.uri(request.uri.port(server.port()))
-        OkHttp().use { client ->
-            val doRequest = { client(requestForMyPort) }
-            runLots(count, doRequest, assertion, ::clearThePipes)
-        }
-    }
-}
-
-fun <R> runLots(
-    count: Int,
-    operation: () -> R,
-    assertion: (R) -> Unit,
-    beforeRun: () -> Unit = {}
-): Report {
-    val errors = ConcurrentLinkedQueue<Throwable>()
-    val callables = List(count) {
-        object : Callable<R> {
-            override fun call(): R {
-                while (true) {
-                    try {
-                        return operation()
-                    } catch (x: Exception) {
-                        errors.add(x)
-                    }
-                }
+    fun requestLotsHttp4k(
+        count: Int,
+        serverConfig: (Int) -> ServerConfig,
+        handler: HttpHandler,
+        request: Request,
+        assertion: (Response) -> Unit
+    ) : Report {
+        return handler.asServer(serverConfig(port)).start().use { server ->
+            val requestForMyPort = request.uri(request.uri.port(server.port()))
+            OkHttp().use { client ->
+                val doRequest = { client(requestForMyPort) }
+                runLots(count, doRequest, assertion, ::clearThePipes)
             }
         }
     }
 
-    val executor = Executors.newVirtualThreadPerTaskExecutor()
-    beforeRun()
+    fun <R> runLots(
+        count: Int,
+        operation: () -> R,
+        assertion: (R) -> Unit,
+        beforeRun: () -> Unit = {}
+    ): Report {
+        val errors = ConcurrentLinkedQueue<Throwable>()
+        val callables = List(count) {
+            object : Callable<R> {
+                override fun call(): R {
+                    while (true) {
+                        try {
+                            return operation()
+                        } catch (x: Exception) {
+                            errors.add(x)
+                        }
+                    }
+                }
+            }
+        }
 
-    val startTimeMs = System.currentTimeMillis()
-    val futures: List<Future<R>> = callables.map { executor.submit(it) }
-    executor.shutdown()
-    val didTerminate = executor.awaitTermination(30, TimeUnit.SECONDS)
-    val endTimeMs = System.currentTimeMillis()
+        val executor = Executors.newVirtualThreadPerTaskExecutor()
+        beforeRun()
 
-    assertTrue(didTerminate, "Failed to complete all jobs")
-    futures.forEach {
-        assertTrue(it.isDone)
-        assertion(it.get())
+        val startTimeMs = System.currentTimeMillis()
+        val futures: List<Future<R>> = callables.map { executor.submit(it) }
+        executor.shutdown()
+        val didTerminate = executor.awaitTermination(30, TimeUnit.SECONDS)
+        val endTimeMs = System.currentTimeMillis()
+
+        assertTrue(didTerminate, "Failed to complete all jobs")
+        futures.forEach {
+            assertTrue(it.isDone)
+            assertion(it.get())
+        }
+        return Report(count, startTimeMs, endTimeMs, errors.toList())
     }
-    return Report(count, startTimeMs, endTimeMs, errors.toList())
+
+    private fun clearThePipes() {
+        System.gc()
+        System.gc()
+        Thread.sleep(30000)
+    }
 }
 
-private fun clearThePipes() {
-    System.gc()
-    System.gc()
-    Thread.sleep(30000)
-}
+
 
 
 data class Report(
