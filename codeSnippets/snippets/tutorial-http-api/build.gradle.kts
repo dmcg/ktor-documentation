@@ -12,6 +12,17 @@ plugins {
     id("idea")
 }
 
+java {
+    toolchain {
+//        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+
+kotlin {
+    jvmToolchain(21)
+}
+
 application {
     mainClass.set("io.ktor.server.netty.EngineMain")
 }
@@ -32,10 +43,17 @@ dependencies {
     implementation("org.http4k:http4k-core")
     implementation("org.http4k:http4k-format-kotlinx-serialization")
     implementation("org.http4k:http4k-server-netty")
+    implementation("org.http4k:http4k-server-jetty")
+    implementation("org.http4k:http4k-client-okhttp")
 
     testImplementation("io.ktor:ktor-server-test-host:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
     testImplementation("org.http4k:http4k-testing-strikt")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 configure<IdeaModel> {
