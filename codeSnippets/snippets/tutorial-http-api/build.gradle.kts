@@ -7,17 +7,16 @@ val logback_version: String by project
 plugins {
     application
     kotlin("jvm")
-    kotlin("plugin.serialization") version "1.9.10"
+    kotlin("plugin.serialization") version "2.0.0"
     id("io.ktor.plugin") version "2.3.10"
     id("idea")
 }
 
-java {
-    toolchain {
+//java {
+//    toolchain {
 //        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
-
+//    }
+//}
 
 kotlin {
     jvmToolchain(21)
