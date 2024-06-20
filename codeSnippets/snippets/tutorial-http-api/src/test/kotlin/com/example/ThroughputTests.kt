@@ -1,10 +1,12 @@
 package cc.home.mapping
 
-import kotlinx.coroutines.delay
+import com.example.models.Customer
+import com.example.models.Order
+import com.example.plugins.routesFor
 import org.http4k.client.OkHttp
 import org.http4k.core.*
-import org.http4k.lens.Query
-import org.http4k.server.JettyLoom
+import org.http4k.server.Jetty
+import org.http4k.server.Netty
 import org.http4k.server.ServerConfig
 import org.http4k.server.asServer
 import org.junit.jupiter.api.*
@@ -12,61 +14,45 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import java.time.Duration
 import java.util.concurrent.*
-import java.util.concurrent.atomic.AtomicInteger
 
-@TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class ThroughputTests {
-    private val requestCount = 10
-    private val invocationCount = AtomicInteger(0)
-    private lateinit var report: Report
 
-    companion object {
-        private val query = Query.required("s")
-        private val request = Request(Method.GET, "http://localhost/").with(query of "banana")
-        private fun body(value: Any) = Response(Status.OK).body(value.toString())
-        private fun checkResponse(response: Response) {
-            assertEquals(Status.OK, response.status)
-            assertEquals("", response.bodyString())
-        }
-    }
+    private val customers = mutableListOf<Customer>()
+    private val orders = mutableListOf<Order>()
+    private val requestCount = 1000
 
     @Test
-    fun `fast fun jettyLoom`() {
-        val handler: HttpHandler = { Response(Status.OK) }
-        report = requestLotsHttp4k(requestCount, ::JettyLoom, handler, request, ::checkResponse)
-    }
-
-    @AfterEach
-    fun report(testInfo: TestInfo) {
-        with(report) {
+    fun test(testInfo: TestInfo) {
+        val handler = routesFor(customers, orders)
+        val request = Request(Method.GET, "http://localhost:8080/customer")
+        val checkResponse = { response: Response -> assertEquals(Status.OK, response.status) }
+        val report = requestLotsHttp4k(requestCount, handler, ::Jetty, request, checkResponse)
+        with (report) {
             println("${testInfo.displayName} : $requestCount in $duration = $requestsPerSecond r/s [$errorsString]")
         }
-        assertEquals(report.requestCount, invocationCount.get())
     }
-
 }
 
-fun requestLotsHttp4k(
-    count: Int,
-    serverConfig: (Int) -> ServerConfig,
+private fun requestLotsHttp4k(
+    requestCount: Int,
     handler: HttpHandler,
+    serverConfig: (Int) -> ServerConfig,
     request: Request,
     assertion: (Response) -> Unit
 ) : Report {
-    return handler.asServer(serverConfig(0)).start().use { server ->
-        val requestForMyPort = request.uri(request.uri.port(server.port()))
+    return handler.asServer(serverConfig(8080)).start().use { server ->
         OkHttp().use { client ->
-            val doRequest = { client(requestForMyPort) }
-            runLots(count, doRequest, assertion, ::clearThePipes)
+            val doRequest = { client(request) }
+            runLots(::clearThePipes, requestCount, doRequest, assertion)
         }
     }
 }
 
-fun <R> runLots(
+private fun <R> runLots(
+    beforeRun: () -> Unit = {},
     count: Int,
     operation: () -> R,
-    assertion: (R) -> Unit,
-    beforeRun: () -> Unit = {}
+    assertion: (R) -> Unit
 ): Report {
     val errors = ConcurrentLinkedQueue<Throwable>()
     val callables = List(count) {
@@ -103,11 +89,9 @@ fun <R> runLots(
 private fun clearThePipes() {
     System.gc()
     System.gc()
-    Thread.sleep(30000)
 }
 
-
-data class Report(
+private data class Report(
     val requestCount: Int,
     val startTimeMs: Long,
     val endTimeMs: Long,
