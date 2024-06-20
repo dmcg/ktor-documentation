@@ -5,7 +5,8 @@ import com.example.models.OrderItem
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import kotlin.test.*
+import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
 
 class OrderRouteTests {
 

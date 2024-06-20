@@ -7,9 +7,9 @@ import org.http4k.core.*
 import org.http4k.core.Method.*
 import org.http4k.strikt.bodyString
 import org.http4k.strikt.status
+import org.junit.jupiter.api.Test
 import strikt.api.expectThat
 import strikt.assertions.isEqualTo
-import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue

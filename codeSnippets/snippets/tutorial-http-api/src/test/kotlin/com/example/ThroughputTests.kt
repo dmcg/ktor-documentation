@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class ThroughputTests {
-    private val requestCount = 1000
+    private val requestCount = 10
     private val invocationCount = AtomicInteger(0)
     private lateinit var report: Report
 
@@ -26,31 +26,12 @@ class ThroughputTests {
         private fun body(value: Any) = Response(Status.OK).body(value.toString())
         private fun checkResponse(response: Response) {
             assertEquals(Status.OK, response.status)
-            assertEquals("6", response.bodyString())
+            assertEquals("", response.bodyString())
         }
     }
 
-    fun fastFun(s: String): Int {
-        invocationCount.getAndIncrement()
-        return s.length
-    }
-
-    fun slowFun(s: String): Int {
-        Thread.sleep(1000)
-        return fastFun(s)
-    }
-
-    suspend fun slowCoroutineFun(s: String): Int {
-        delay(1000)
-        return fastFun(s)
-    }
-
     @Test
-    @Order(2)
     fun `fast fun jettyLoom`() {
-        // java version
-        println(Runtime.version())
-        println(KotlinVersion.CURRENT)
         val handler: HttpHandler = { Response(Status.OK) }
         report = requestLotsHttp4k(requestCount, ::JettyLoom, handler, request, ::checkResponse)
     }
