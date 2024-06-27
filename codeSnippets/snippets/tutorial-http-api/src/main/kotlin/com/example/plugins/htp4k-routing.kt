@@ -16,12 +16,12 @@ fun routesFor(
 ): HttpHandler =
     ServerFilters.CatchLensFailure.then(
         routes(
+            "/customer" bind routesFor(customers),
             "/order" bind routesFor(orders),
-            "/customer" bind routesFor(customers)
         )
     )
 
-private fun routesFor(customers: List<Order>) =
+private fun routesFor(orders: List<Order>) =
     routes(
         "/" bind GET to { TODO() }
     )
