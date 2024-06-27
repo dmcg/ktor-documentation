@@ -1,4 +1,4 @@
-package com.example
+package com.example.routes
 
 import com.example.models.Customer
 import com.example.models.Order
