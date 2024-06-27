@@ -17,11 +17,7 @@ fun routesFor(customers: MutableList<Customer>) =
     with(exampleAppJson) {
         routes(
             "/" bind GET to {
-                if (customers.isEmpty()) {
-                    Response(OK).body("No customers found")
-                } else {
-                    Response(OK).json(customers)
-                }
+                Response(OK).json(customers)
             },
             "/{id}" bind GET to { req ->
                 val id = req.path("id")

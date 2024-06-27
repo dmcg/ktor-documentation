@@ -10,11 +10,7 @@ import io.ktor.server.routing.*
 fun Route.customerRouting(customers: MutableList<Customer>) {
     route("/customer") {
         get {
-            if (customers.isNotEmpty()) {
-                call.respond(customers)
-            } else {
-                call.respondText("No customers found", status = HttpStatusCode.OK)
-            }
+            call.respond(customers)
         }
         get("{id?}") {
             val id = call.parameters["id"] ?: return@get call.respondText(

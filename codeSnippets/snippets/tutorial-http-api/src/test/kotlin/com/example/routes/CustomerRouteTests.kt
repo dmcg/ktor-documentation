@@ -25,12 +25,12 @@ class CustomerRouteTests {
     private val orders = emptyList<Order>()
 
     @Test
-    fun `returns No customers found when there are no customers`() =
+    fun `returns an empty array when there are no customers`() =
         testApplicationWith(customers, orders) {
             customers.clear()
             with(client.get("/customer")) {
                 assertEquals(HttpStatusCode.OK, status)
-                assertEquals("No customers found", bodyAsText())
+                assertEquals("[]", bodyAsText())
             }
         }
 

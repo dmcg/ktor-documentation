@@ -29,11 +29,11 @@ class CustomerRouteHttp4kTests {
     private val handler = routesFor(customers, orders)
 
     @Test
-    fun `returns No customers found when there are no customers`() {
+    fun `returns empty array found when there are no customers`() {
         customers.clear()
         expectThat(handler(Request(GET, "/customer"))) {
             status.isEqualTo(Status.OK)
-            bodyString.isEqualTo("No customers found")
+            bodyString.isEqualTo("[]")
         }
     }
 
