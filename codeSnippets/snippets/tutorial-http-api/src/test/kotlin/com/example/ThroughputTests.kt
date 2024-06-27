@@ -2,11 +2,14 @@ package cc.home.mapping
 
 import com.example.models.Customer
 import com.example.models.Order
+import com.example.module
 import com.example.plugins.routesFor
+import io.ktor.server.application.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
 import org.http4k.client.OkHttp
 import org.http4k.core.*
 import org.http4k.server.Jetty
-import org.http4k.server.Netty
 import org.http4k.server.ServerConfig
 import org.http4k.server.asServer
 import org.junit.jupiter.api.*
@@ -20,15 +23,39 @@ class ThroughputTests {
     private val customers = mutableListOf<Customer>()
     private val orders = mutableListOf<Order>()
     private val requestCount = 1000
+    val request = Request(Method.GET, "http://localhost:8080/customer")
+    val checkResponse = { response: Response -> assertEquals(Status.OK, response.status) }
 
     @Test
-    fun test(testInfo: TestInfo) {
+    fun testHttp4k(testInfo: TestInfo) {
         val handler = routesFor(customers, orders)
-        val request = Request(Method.GET, "http://localhost:8080/customer")
-        val checkResponse = { response: Response -> assertEquals(Status.OK, response.status) }
-        val report = requestLotsHttp4k(requestCount, handler, ::Jetty, request, checkResponse)
-        with (report) {
-            println("${testInfo.displayName} : $requestCount in $duration = $requestsPerSecond r/s [$errorsString]")
+        doIt(testInfo) {
+            requestLotsHttp4k(requestCount, handler, ::Jetty, request, checkResponse)
+        }
+    }
+
+    @Test
+    fun testKtor(testInfo: TestInfo) {
+        val handler: (Application).() -> Unit = { module(customers, orders) }
+        doIt(testInfo) {
+            requestLotsKtor(requestCount, handler, Netty, request, checkResponse)
+        }
+    }
+
+    private fun doIt(testInfo: TestInfo, run: (Int) -> Report) {
+        val reports = (1..10).map {
+            val report = run(it)
+            with(report) {
+                println("${testInfo.displayName} : $requestCount in $duration = $requestsPerSecond r/s [$errorsString]")
+            }
+            if (report.errors.isNotEmpty())
+                Thread.sleep(60000)
+            report
+        }
+        reports.forEach { report ->
+            with(report) {
+                println("${testInfo.displayName} : $requestCount in $duration = $requestsPerSecond r/s [$errorsString]")
+            }
         }
     }
 }
@@ -39,12 +66,38 @@ private fun requestLotsHttp4k(
     serverConfig: (Int) -> ServerConfig,
     request: Request,
     assertion: (Response) -> Unit
-) : Report {
+): Report {
     return handler.asServer(serverConfig(8080)).start().use { server ->
         OkHttp().use { client ->
-            val doRequest = { client(request) }
+            val doRequest = {
+                client(request)
+            }
             runLots(::clearThePipes, requestCount, doRequest, assertion)
         }
+    }
+}
+
+private fun requestLotsKtor(
+    requestCount: Int,
+    handler: Application.() -> Unit,
+    netty: Netty,
+    request: Request,
+    assertion: (Response) -> Unit
+): Report {
+    val server = embeddedServer(
+        netty,
+        port = 8080,
+        module = handler
+    ).start(wait = false)
+    return try {
+        OkHttp().use { client ->
+            val doRequest = {
+                client(request)
+            }
+            runLots(::clearThePipes, requestCount, doRequest, assertion)
+        }
+    } finally {
+        server.stop()
     }
 }
 
@@ -58,13 +111,16 @@ private fun <R> runLots(
     val callables = List(count) {
         object : Callable<R> {
             override fun call(): R {
-                while (true) {
+                for (i in 5 downTo 0) {
                     try {
                         return operation()
                     } catch (x: Exception) {
                         errors.add(x)
+                        if (i == 0)
+                            throw TooManyRetries(x)
                     }
                 }
+                error("Bad retry logic")
             }
         }
     }
@@ -85,6 +141,8 @@ private fun <R> runLots(
     }
     return Report(count, startTimeMs, endTimeMs, errors.toList())
 }
+
+class TooManyRetries(cause: Exception) : Error("Too many retries", cause)
 
 private fun clearThePipes() {
     System.gc()
