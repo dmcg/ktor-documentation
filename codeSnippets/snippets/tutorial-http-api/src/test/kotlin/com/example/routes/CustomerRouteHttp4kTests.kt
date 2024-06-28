@@ -1,6 +1,7 @@
 package com.example.routes
 
 import com.example.models.Customer
+import com.example.models.InMemoryCustomers
 import com.example.models.Order
 import com.example.plugins.routesFor
 import org.http4k.core.*
@@ -24,7 +25,7 @@ class CustomerRouteHttp4kTests {
     )
     private val aCustomerJson = """{"id":"id","firstName":"firstName","lastName":"lastName","email":"email"}"""
 
-    private val customers = mutableListOf(aCustomer)
+    private val customers = InMemoryCustomers(aCustomer)
     private val orders = emptyList<Order>()
     private val handler = routesFor(customers, orders)
 
@@ -103,7 +104,7 @@ class CustomerRouteHttp4kTests {
         ) {
             status.isEqualTo(Status.CREATED)
         }
-        assertEquals(listOf(aCustomer), customers)
+        assertEquals(listOf(aCustomer), customers.list())
     }
 
     @Test
@@ -111,6 +112,6 @@ class CustomerRouteHttp4kTests {
         expectThat(handler(Request(POST, "/customer"))) {
             status.isEqualTo(Status.BAD_REQUEST)
         }
-        assertEquals(listOf(aCustomer), customers)
+        assertEquals(listOf(aCustomer), customers.list())
     }
 }

@@ -7,7 +7,7 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 
 fun main() {
-    val customers = mutableListOf<Customer>()
+    val customers = InMemoryCustomers()
     val orders = mutableListOf<Order>()
     embeddedServer(
         Netty,
@@ -17,7 +17,7 @@ fun main() {
 }
 
 fun Application.module(
-    customers: MutableList<Customer>,
+    customers: Customers,
     orders: List<Order>
 ) {
     configureRouting(customers, orders)

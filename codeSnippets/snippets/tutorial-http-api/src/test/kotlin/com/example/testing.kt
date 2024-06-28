@@ -1,11 +1,11 @@
 package com.example
 
-import com.example.models.Customer
+import com.example.models.Customers
 import com.example.models.Order
 import io.ktor.server.testing.*
 
 fun testApplicationWith(
-    customerStorage: MutableList<Customer>,
+    customerStorage: Customers,
     orders: List<Order>,
     block: suspend ApplicationTestBuilder.() -> Unit
 ) {

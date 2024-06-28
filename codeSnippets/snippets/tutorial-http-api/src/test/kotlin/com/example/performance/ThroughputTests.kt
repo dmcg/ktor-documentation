@@ -1,6 +1,6 @@
 package cc.home.mapping
 
-import com.example.models.Customer
+import com.example.models.InMemoryCustomers
 import com.example.models.Order
 import com.example.module
 import com.example.plugins.routesFor
@@ -20,7 +20,7 @@ import java.util.concurrent.*
 
 class ThroughputTests {
 
-    private val customers = mutableListOf<Customer>()
+    private val customers = InMemoryCustomers()
     private val orders = mutableListOf<Order>()
     private val requestCount = 1000
     val request = Request(Method.GET, "http://localhost:8080/customer")

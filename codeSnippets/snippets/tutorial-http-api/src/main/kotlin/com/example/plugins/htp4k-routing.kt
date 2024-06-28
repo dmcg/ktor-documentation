@@ -1,6 +1,6 @@
 package com.example.plugins
 
-import com.example.models.Customer
+import com.example.models.Customers
 import com.example.models.Order
 import com.example.routes.routesFor
 import org.http4k.core.HttpHandler
@@ -11,7 +11,7 @@ import org.http4k.routing.bind
 import org.http4k.routing.routes
 
 fun routesFor(
-    customers: MutableList<Customer>,
+    customers: Customers,
     orders: List<Order>
 ): HttpHandler =
     ServerFilters.CatchLensFailure.then(

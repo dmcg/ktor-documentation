@@ -1,5 +1,6 @@
 package com.example.routes
 
+import com.example.models.InMemoryCustomers
 import com.example.models.Order
 import com.example.models.OrderItem
 import com.example.testApplicationWith
@@ -23,7 +24,7 @@ class OrderRouteTests {
     )
 
     @Test
-    fun testGetOrder() = testApplicationWith(mutableListOf(), orders) {
+    fun testGetOrder() = testApplicationWith(InMemoryCustomers(), orders) {
         val response = client.get("/order/2020-04-06-01")
         assertEquals(
             """{"number":"2020-04-06-01","contents":[{"item":"Ham Sandwich","amount":2,"price":5.5},{"item":"Water","amount":1,"price":1.5},{"item":"Beer","amount":3,"price":2.3},{"item":"Cheesecake","amount":1,"price":3.75}]}""",
