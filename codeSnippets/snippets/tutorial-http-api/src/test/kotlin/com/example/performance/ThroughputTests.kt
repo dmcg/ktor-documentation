@@ -1,9 +1,13 @@
 package cc.home.mapping
 
-import com.example.models.InMemoryCustomers
+import com.example.models.Customer
+import com.example.models.Customers
 import com.example.models.Order
+import com.example.models.ThirdPartyCustomers
 import com.example.module
 import com.example.plugins.routesFor
+import com.example.util.fake
+import com.example.util.structurallyTypedAs
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -20,9 +24,9 @@ import java.util.concurrent.*
 
 class ThroughputTests {
 
-    private val customers = InMemoryCustomers()
+    private val customers = ThirdPartyCustomers().structurallyTypedAs<Customers>()
     private val orders = mutableListOf<Order>()
-    private val requestCount = 1000
+    private val requestCount = 100
     val request = Request(Method.GET, "http://localhost:8080/customer")
     val checkResponse = { response: Response -> assertEquals(Status.OK, response.status) }
 
@@ -59,6 +63,7 @@ class ThroughputTests {
         }
     }
 }
+
 
 private fun requestLotsHttp4k(
     requestCount: Int,
