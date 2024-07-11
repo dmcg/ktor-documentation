@@ -53,13 +53,11 @@ internal fun Class<*>.allTypes(
     soFar: MutableList<Class<*>> = mutableListOf()
 ): Set<Class<*>> {
     soFar.add(this)
-    val interfaces = this.interfaces
-    soFar.addAll(interfaces)
-    interfaces.forEach {
+    this.interfaces.forEach {
         it.allTypes(soFar)
     }
-    return if (this.superclass == null)
-        soFar.toSet()
-    else
-        this.superclass.allTypes(soFar)
+    return when (val superClass = this.superclass) {
+        null -> soFar.toSet()
+        else -> superClass.allTypes(soFar)
+    }
 }
