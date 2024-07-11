@@ -1,9 +1,7 @@
 package cc.home.mapping
 
-import com.example.models.Customer
-import com.example.models.Customers
+import com.example.models.*
 import com.example.models.Order
-import com.example.models.ThirdPartyCustomers
 import com.example.module
 import com.example.plugins.routesFor
 import com.example.util.fake
@@ -24,7 +22,7 @@ import java.util.concurrent.*
 
 class ThroughputTests {
 
-    private val customers = ThirdPartyCustomers().structurallyTypedAs<Customers>()
+    private val customers = InMemoryCustomers()
     private val orders = mutableListOf<Order>()
     private val requestCount = 100
     val request = Request(Method.GET, "http://localhost:8080/customer")

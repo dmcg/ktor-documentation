@@ -33,23 +33,3 @@ class InMemoryCustomers(
     }
     fun isEmpty() = list.isEmpty()
 }
-
-class ThirdPartyCustomers(
-    val list: MutableList<Customer> = mutableListOf()
-) {
-    constructor(vararg customers: Customer) :
-        this(customers.toMutableList())
-    fun list(): List<Customer> = list
-    fun findById(id: String) =
-        list.find { it.id == id }
-    fun addCustomer(customer: Customer) {
-        list.add(customer)
-    }
-    fun deleteById(id: String): Boolean {
-        return list.removeIf { it.id == id }
-    }
-    fun clear() {
-        list.clear()
-    }
-    fun isEmpty() = list.isEmpty()
-}

@@ -8,7 +8,7 @@ import kotlin.test.assertEquals
 class StructuralTypingTests {
 
     @Test
-    fun test() {
+    fun `calls methods with matching name and signature`() {
         val wrapped = listOf("banana", "kumquat")
         val wrapper = wrapped.structurallyTypedAs<MyCollection<String>>()
         assertEquals(2, wrapper.size())
@@ -16,7 +16,7 @@ class StructuralTypingTests {
     }
 
     @Test
-    fun `throws method not found on creation if can't find a match`() {
+    fun `throws NoSuchMethodError on creation if can't find a match`() {
         val wrapped = listOf("banana", "kumquat")
         assertThrows<NoSuchMethodError> {
             wrapped.structurallyTypedAs<MyCollection2<String>>()
@@ -24,7 +24,7 @@ class StructuralTypingTests {
     }
 
     @Test
-    fun `find all types`() {
+    fun `can find all types of an object`() {
         val thing = "hello"
         assertEquals(
             setOf(String::class.java, Serializable::class.java, Comparable::class.java, CharSequence::class.java, java.lang.constant.Constable::class.java, java.lang.constant.ConstantDesc::class.java, Object::class.java),
