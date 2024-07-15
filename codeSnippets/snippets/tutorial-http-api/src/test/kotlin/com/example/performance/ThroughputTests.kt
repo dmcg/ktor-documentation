@@ -4,8 +4,6 @@ import com.example.models.*
 import com.example.models.Order
 import com.example.module
 import com.example.plugins.routesFor
-import com.example.util.fake
-import com.example.util.structurallyTypedAs
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
