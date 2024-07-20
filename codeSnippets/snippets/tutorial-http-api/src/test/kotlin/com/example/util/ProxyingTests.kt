@@ -35,12 +35,12 @@ class ProxyingTests {
     fun `stronglyStructurallyTypedAs throws NoSuchMethodError on creation if can't find a match`() {
         val wrapped = listOf("banana", "kumquat")
         try {
-            wrapped.stronglyStructurallyTypedAs<MyCollection2<String>>()
+            wrapped.stronglyStructurallyTypedAs<MyCollectionWithNoSuch<String>>()
             fail("No exception was thrown")
         } catch (e: NoSuchMethodError) {
             println(e.message)
             assertTrue(e.message!!.contains("Nothing found to match methods"))
-            assertTrue(e.message!!.contains("public abstract java.lang.Object com.example.util.MyCollection2.nosuch()"))
+            assertTrue(e.message!!.contains("public abstract java.lang.Object com.example.util.MyCollectionWithNoSuch.nosuch()"))
         }
     }
 
@@ -48,7 +48,8 @@ class ProxyingTests {
     fun `weaklyStructurallyTypedAs does not throw NoSuchMethodError`() {
         val wrapped = listOf("banana", "kumquat")
         val implementation =
-            object : MyCollection2<String> by wrapped.weaklyStructurallyTypedAs<MyCollection2<String>>() {
+            object :
+                MyCollectionWithNoSuch<String> by wrapped.weaklyStructurallyTypedAs<MyCollectionWithNoSuch<String>>() {
                 override fun nosuch(): Any = "aha"
             }
         assertEquals("aha", implementation.nosuch())
@@ -67,10 +68,28 @@ class ProxyingTests {
     }
 
     @Test
+    fun `can distinguish between nothing to call and returning null`() {
+        val wrapped = object {
+            @Suppress("unused")
+            fun nosuch() = null
+        }
+        val wrapper = wrapped.weaklyStructurallyTypedAs<MyCollectionWithNoSuch<String>>()
+        assertEquals(null, wrapper.nosuch())
+    }
+
+    @Test
     fun `allTypes can find all types of an object`() {
         val thing = "hello"
         assertEquals(
-            setOf(String::class.java, Serializable::class.java, Comparable::class.java, CharSequence::class.java, java.lang.constant.Constable::class.java, java.lang.constant.ConstantDesc::class.java, Object::class.java),
+            setOf(
+                String::class.java,
+                Serializable::class.java,
+                Comparable::class.java,
+                CharSequence::class.java,
+                java.lang.constant.Constable::class.java,
+                java.lang.constant.ConstantDesc::class.java,
+                Object::class.java
+            ),
             thing::class.java.allTypes()
         )
     }
@@ -87,8 +106,8 @@ interface MyCoCollection<E> {
     fun isEmpty(): Boolean
 }
 
-interface MyCollection2<E> {
+interface MyCollectionWithNoSuch<E> {
     fun size(): Int
     fun get(index: Int): E
-    fun nosuch(): Any
+    fun nosuch(): Any?
 }

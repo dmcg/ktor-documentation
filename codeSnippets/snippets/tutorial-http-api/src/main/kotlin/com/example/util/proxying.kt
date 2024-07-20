@@ -20,8 +20,11 @@ fun <T> Map<Method, (MyInvocationHandler)?>.asProxy(
     proxyType.classLoader,
     arrayOf(proxyType)
 ) { _, method, args ->
-    this[method]?.invoke(args ?: emptyArray<Any>())
-        ?: error("No implementation for method $method")
+    val invocationHandler =
+        this.getOrElse(method) {
+            error("No implementation for method $method")
+        } ?: error("Bad default logic for method $method")
+    invocationHandler.invoke(args ?: emptyArray<Any>())
 } as T
 
 inline fun <reified T> Any.stronglyStructurallyTypedAs(): T =
@@ -69,6 +72,7 @@ fun <T> Any.coStructuralLookupFor(proxyType: Class<T>): Map<Method, (MyInvocatio
         }
     }
 }
+
 fun Map<Method, (MyInvocationHandler)?>.checkAllFound(): Map<Method, MyInvocationHandler> {
     val notFound = this.entries.filter { it.value == null }
     if (notFound.isNotEmpty()) {
